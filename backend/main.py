@@ -1,17 +1,8 @@
 import argparse
-import pprint
 import multiprocessing
 import time
-import elasticsearch
 import sys
 import signal
-
-import config
-
-reddit = config.init_reddit()
-
-pp = pprint.PrettyPrinter(indent=2)
-es = elasticsearch.Elasticsearch()
 
 
 class GracefulKiller:
