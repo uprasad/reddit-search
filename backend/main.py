@@ -88,6 +88,3 @@ if __name__ == "__main__":
             comment_stream_process.terminate()
             post_stream_process.terminate()
             sys.exit()
-
-            # prawcore.exceptions.Forbidden: received 403 HTTP response
-            # prawcore.exceptions.RequestException: error with request HTTPSConnectionPool
