@@ -3,6 +3,13 @@ import multiprocessing
 import time
 import sys
 import signal
+import config
+import pprint
+
+
+reddit = config.init_reddit()
+es = config.init_elasticsearch()
+pp = pprint.PrettyPrinter()
 
 
 class GracefulKiller:
@@ -32,12 +39,12 @@ def comment_stream(subreddit_list):
             "submission_title": comment.link_title,
             "gilded": comment.gilded,
             "author": comment.author.name,
-            "subreddit": comment.subreddit.display_name,
+            "subreddit": comment.subreddit.display_name.lower(),
             "created_utc": comment.created_utc,
             "permalink": comment.permalink(fast=True)
         }
         pp.pprint(comment_details)
-        res = es.index(index="test-index", doc_type="comment", body=comment_details, id=comment.id)
+        res = es.index(index="reddit-comments", doc_type=comment_details["subreddit"], body=comment_details, id=comment.id)
         print(res)
 
 
@@ -50,7 +57,7 @@ def post_stream(subreddit_list):
             return
         # new post
         submission_details = {
-            "subreddit": submission.subreddit.display_name,
+            "subreddit": submission.subreddit.display_name.lower(),
             "id": submission.id,
             "subreddit_id": submission.subreddit_id,
             "author": submission.author.name,
@@ -59,11 +66,15 @@ def post_stream(subreddit_list):
             "created_utc": submission.created_utc
         }
         pp.pprint(submission_details)
-        res = es.index(index="test-index", doc_type="post", body=submission_details, id=submission.id)
+        res = es.index(index="reddit-posts", doc_type=submission_details["subreddit"], body=submission_details, id=submission.id)
         print(res)
 
 
 if __name__ == "__main__":
+    if not es.ping():
+        print("Elasticsearch cluster is not up, exiting")
+        sys.exit()
+
     parser = argparse.ArgumentParser(description="Stream and index comments and post from subreddits")
     parser.add_argument("-s", "--subreddits", nargs="+", help="<Required> list of subreddits", required=True, type=str)
     args = parser.parse_args()

@@ -1,19 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <meta charset="UTF-8">
     <title>Reddit Search</title>
 </head>
 <body>
-    <form class="navbar-form navbar-left" role="search" action="/" method="GET">
-        <div class="form-group">
-            <input type="text" class="form-control" placeholder="Search" name="query">
-        </div>
-        <button type="submit" class="btn btn-default">Submit</button>
-    </form>
+    <div class="page-header">
+        <form role="search" action="/" method="GET">
+            <div class="input-group">
+                <span  class="input-group-btn">
+                    <button type="submit" class="btn btn-default">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+                </span>
+                {% if request.args.get('query') %}
+                    <input type="text" class="form-control" name="query" placeholder="{{ request.args.get('query') }}">
+                {% else %}
+                    <input type="text" class="form-control" name="query" placeholder="Search">
+                {% endif %}
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon" id="sizing-addon2">Subreddits</span>
+                {% if request.args.get('subreddits') %}
+                    <input type="text" class="form-control" placeholder="{{ request.args.get('subreddits') }}"
+                       aria-describedby="sizing-addon2" name="subreddits">
+                {% else %}
+                    <input type="text" class="form-control" placeholder="Comma separated list (default: all)"
+                       aria-describedby="sizing-addon2" name="subreddits">
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <div>
     {% if results %}
-        <!-- Display results here -->
+        {% for result in results %}
+            <div class="list-group">
+                <a href="http://www.reddit.com/r/{{result.subreddit}}{{result.permalink}}" class="list-group-item">
+                    <h4 class="list-group-item-heading"> {{result.submission_title}} </h4>
+                    <h6 class="list-group-item-heading"> {{result.author}} </h6>
+                    <p class="list-group-item-text"> {{result.body}} </p>
+                </a>
+            </div>
+        {% endfor %}
     {% endif %}
+    </div>
 </body>
 </html>
