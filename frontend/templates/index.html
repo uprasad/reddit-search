@@ -3,6 +3,11 @@
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous">
+    </script>
     <meta charset="UTF-8">
     <title>Reddit Search</title>
 </head>
@@ -16,34 +21,76 @@
                     </button>
                 </span>
                 {% if request.args.get('query') %}
-                    <input type="text" class="form-control" name="query" placeholder="{{ request.args.get('query') }}">
+                    <input type="text" class="form-control" name="query" value="{{ request.args.get('query') }}">
                 {% else %}
                     <input type="text" class="form-control" name="query" placeholder="Search">
                 {% endif %}
             </div>
             <div class="input-group">
-                <span class="input-group-addon" id="sizing-addon2">Subreddits</span>
+                <span class="input-group-addon" id="subreddit-desc">Subreddits</span>
                 {% if request.args.get('subreddits') %}
-                    <input type="text" class="form-control" placeholder="{{ request.args.get('subreddits') }}"
-                       aria-describedby="sizing-addon2" name="subreddits">
+                    <input type="text" class="form-control" value="{{ request.args.get('subreddits') }}"
+                       aria-describedby="subreddit-desc" name="subreddits">
                 {% else %}
                     <input type="text" class="form-control" placeholder="Comma separated list (default: all)"
-                       aria-describedby="sizing-addon2" name="subreddits">
+                       aria-describedby="subreddit-desc" name="subreddits">
                 {% endif %}
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon" id="type-desc">Search in</span>
+                <div class="btn-group" data-toggle="buttons">
+                    {% if (not request.args.get('type')) or (request.args.get('type') == "comments") %}
+                        <label class="btn btn-primary active">
+                            <input type="radio" name="type" checked value="comments"> Comments
+                        </label>
+                    {% else %}
+                        <label class="btn btn-primary">
+                            <input type="radio" name="type" value="comments"> Comments
+                        </label>
+                    {% endif %}
+
+                    {% if request.args.get('type') == "posts" %}
+                        <label class="btn btn-primary active">
+                            <input type="radio" name="type" checked value="posts"> Posts
+                        </label>
+                        {% else %}
+                        <label class="btn btn-primary">
+                            <input type="radio" name="type" value="posts"> Posts
+                        </label>
+                    {% endif %}
+                </div>
             </div>
         </form>
     </div>
     <div>
     {% if results %}
-        {% for result in results %}
-            <div class="list-group">
-                <a href="http://www.reddit.com/r/{{result.subreddit}}{{result.permalink}}" class="list-group-item">
-                    <h4 class="list-group-item-heading"> {{result.submission_title}} </h4>
-                    <h6 class="list-group-item-heading"> {{result.author}} </h6>
-                    <p class="list-group-item-text"> {{result.body}} </p>
-                </a>
-            </div>
-        {% endfor %}
+        {% if query_type == "comments" %}
+            {% for result in results %}
+                <div class="list-group">
+                    <a href="http://www.reddit.com/r/{{result.subreddit}}{{result.permalink}}" class="list-group-item">
+                        <h4 class="list-group-item-heading"> {{result.title}} </h4>
+                        <h6 class="list-group-item-heading"> /r/{{result.subreddit}} </h6>
+                        <h6 class="list-group-item-heading">
+                            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> {{result.author}}
+                        </h6>
+                        <p class="list-group-item-text"> {{result.body}} </p>
+                    </a>
+                </div>
+            {% endfor %}
+        {% elif query_type == "posts" %}
+            {% for result in results %}
+                <div class="list-group">
+                    <a href="http://www.reddit.com/r/{{result.subreddit}}/{{result.id}}" class="list-group-item">
+                        <h4 class="list-group-item-heading"> {{result.title}} </h4>
+                        <h6 class="list-group-item-heading"> /r/{{result.subreddit}} </h6>
+                        <h6 class="list-group-item-heading">
+                            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> {{result.author}}
+                        </h6>
+                        <p class="list-group-item-text"> {{result.selftext}} </p>
+                    </a>
+                </div>
+            {% endfor %}
+        {% endif %}
     {% endif %}
     </div>
 </body>

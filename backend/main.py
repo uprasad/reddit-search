@@ -23,50 +23,61 @@ class GracefulKiller:
         self.kill_now = True
 
 
-def comment_stream(subreddit_list):
+def get_comment_details(comment):
+    return {
+        "body": comment.body,
+        "id": comment.id,
+        "parent_id": comment.parent_id,
+        "subreddit_id": comment.subreddit_id,
+        "post_id": comment.submission.id,
+        "title": comment.link_title,
+        "author": comment.author.name,
+        "subreddit": comment.subreddit.display_name,
+        "created_utc": comment.created_utc,
+        "permalink": comment.permalink(fast=True),
+        "flair": comment.author_flair_text
+    }
+
+
+def comment_stream(subreddits):
     stream_killer = GracefulKiller()
-    for comment in reddit.subreddit("+".join(subreddit_list)).stream.comments():
+    for comment in reddit.subreddit("+".join(subreddits)).stream.comments():
         if stream_killer.kill_now:
             print("Comment stream received SIGTERM")
             return
         # new comment
-        comment_details = {
-            "body": comment.body,
-            "id": comment.id,
-            "parent_id": comment.parent_id,
-            "subreddit_id": comment.subreddit_id,
-            "submission_id": comment.submission.id,
-            "submission_title": comment.link_title,
-            "gilded": comment.gilded,
-            "author": comment.author.name,
-            "subreddit": comment.subreddit.display_name.lower(),
-            "created_utc": comment.created_utc,
-            "permalink": comment.permalink(fast=True)
-        }
+        comment_details = get_comment_details(comment)
         pp.pprint(comment_details)
-        res = es.index(index="reddit-comments", doc_type=comment_details["subreddit"], body=comment_details, id=comment.id)
+        res = es.index(index="reddit-comments", doc_type=comment_details["subreddit"].lower(),
+                       body=comment_details, id=comment.id)
         print(res)
 
 
-def post_stream(subreddit_list):
-    print("+".join(subreddit_list))
+def get_post_details(post):
+    return {
+        "subreddit": post.subreddit.display_name,
+        "id": post.id,
+        "subreddit_id": post.subreddit_id,
+        "author": post.author.name,
+        "url": post.url,
+        "title": post.title,
+        "selftext": post.selftext,
+        "created_utc": post.created_utc,
+        "flair": post.link_flair_text
+    }
+
+
+def post_stream(subreddits):
+    print("+".join(subreddits))
     stream_killer = GracefulKiller()
-    for submission in reddit.subreddit("+".join(subreddit_list)).stream.submissions():
+    for post in reddit.subreddit("+".join(subreddits)).stream.submissions():
         if stream_killer.kill_now:
             print("Post stream received SIGTERM")
             return
         # new post
-        submission_details = {
-            "subreddit": submission.subreddit.display_name.lower(),
-            "id": submission.id,
-            "subreddit_id": submission.subreddit_id,
-            "author": submission.author.name,
-            "url": submission.url,
-            "title": submission.title,
-            "created_utc": submission.created_utc
-        }
-        pp.pprint(submission_details)
-        res = es.index(index="reddit-posts", doc_type=submission_details["subreddit"], body=submission_details, id=submission.id)
+        post_details = get_post_details(post)
+        pp.pprint(post_details)
+        res = es.index(index="reddit-posts", doc_type=post_details["subreddit"].lower(), body=post_details, id=post.id)
         print(res)
 
 
